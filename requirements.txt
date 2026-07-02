@@ -1,0 +1,30 @@
+# --- Core agent framework ---
+langchain>=0.3.0
+langchain-community>=0.3.0
+
+# --- LLM providers (default = Google Gemini, free tier) ---
+langchain-google-genai>=2.0.0
+# Optional drop-in providers (uncomment/install as needed):
+langchain-groq>=0.2.0
+# langchain-openai>=0.2.0
+# langchain-anthropic>=0.3.0
+
+# --- Data: HuggingFace datasets -> SQLite ---
+datasets>=2.19.0
+pandas>=2.0.0
+SQLAlchemy>=2.0.0
+
+# --- Web search tool (keyless, free) ---
+ddgs>=6.0.0
+# Optional higher-quality search (needs TAVILY_API_KEY):
+# tavily-python>=0.5.0
+
+# --- UI ---
+streamlit>=1.36.0
+
+# --- Utilities ---
+python-dotenv>=1.0.0
+
+# --- Dev / test ---
+pytest>=8.0.0
+ruff>=0.6.0
