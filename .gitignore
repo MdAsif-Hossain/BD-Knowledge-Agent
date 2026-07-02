@@ -1,30 +1,95 @@
-# Environment / secrets
+# ===========================================================================
+#  Multi-Tool AI Agent for Bangladesh — .gitignore
+# ===========================================================================
+
+# --- Secrets & environment (NEVER commit real keys) ------------------------
 .env
 .env.*
-!.env.example
+*.env
+.envrc
+!.env.example                # keep the template
+.streamlit/secrets.toml      # Streamlit Cloud reads secrets from its dashboard
 
-# Python
+# --- Python bytecode / build artifacts -------------------------------------
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+build/
+dist/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+*.egg
 *.egg-info/
+.installed.cfg
+wheels/
+*.manifest
+*.spec
+
+# --- Virtual environments --------------------------------------------------
 .venv/
 venv/
 env/
-build/
-dist/
+ENV/
+.python-version
+Pipfile.lock
+poetry.lock
 
-# Tooling caches
+# --- Testing / coverage / type-checking ------------------------------------
 .pytest_cache/
-.ruff_cache/
-.mypy_cache/
-.ipynb_checkpoints/
-
-# HuggingFace datasets cache
 .cache/
-hf_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+.tox/
+.nox/
+.hypothesis/
+.mypy_cache/
+.dmypy.json
+.pyre/
+.pytype/
 
-# OS
+# --- Linters / formatters --------------------------------------------------
+.ruff_cache/
+
+# --- Jupyter / IPython -----------------------------------------------------
+.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+
+# --- HuggingFace / datasets cache ------------------------------------------
+.cache/huggingface/
+hf_cache/
+*.lock
+
+# --- Logs & temp -----------------------------------------------------------
+*.log
+logs/
+tmp/
+*.tmp
+*.bak
+
+# --- IDE / editor ----------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- OS --------------------------------------------------------------------
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
 
-# NOTE: data/*.db is intentionally committed so the live demo runs with zero setup.
+# ===========================================================================
+#  Project data
+#  The SQLite databases in data/ are intentionally COMMITTED so the live demo
+#  runs with zero setup. To keep the repo lightweight instead, uncomment the
+#  line below and run `python -m src.data.build_databases` after cloning.
+# ===========================================================================
+# data/*.db
