@@ -8,6 +8,15 @@ def test_clean_sql_strips_fences_label_and_trailing():
     assert _clean_sql("SELECT a FROM t; DROP TABLE t") == "SELECT a FROM t"
 
 
+def test_clean_sql_handles_echoed_scaffold():
+    # Llama-style output that echoes the Question/SQLQuery scaffold.
+    raw = 'Question: How many?\nSQLQuery: SELECT COUNT("id") FROM hospitals'
+    assert _clean_sql(raw) == 'SELECT COUNT("id") FROM hospitals'
+    # ...with a trailing SQLResult label.
+    raw2 = "SQLQuery: SELECT 1\nSQLResult: [(1,)]\nAnswer: one"
+    assert _clean_sql(raw2) == "SELECT 1"
+
+
 def test_is_safe_select_allows_reads():
     assert _is_safe_select("SELECT * FROM hospitals")
     assert _is_safe_select("WITH x AS (SELECT 1) SELECT * FROM x")

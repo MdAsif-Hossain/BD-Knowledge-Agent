@@ -32,8 +32,15 @@ Routing rules:
   stored in the databases, call WebSearchTool.
 - If a database tool reports that the requested detail is not in its dataset (for example,
   hospital bed counts or a restaurant's cuisine), fall back to WebSearchTool.
-- Choose the single most relevant tool. Base your final answer only on tool outputs, keep it
-  concise, and briefly mention which source (which dataset or the web) you used.
+- Choose the single most relevant tool and call it at most once when it already answered.
+
+The tools already return a complete, written answer. Relay that answer to the user IN FULL —
+including every number, name, and fact it contains — then add one short source note. Never
+reply with only the name of a tool or a bare statement like "the answer came from X".
+
+Example — if a tool returns "There are 2919 hospitals in Dhaka district.", your final answer
+must be: "There are 2919 hospitals in Dhaka district. (Source: hospitals dataset)".
+Base your answer only on tool outputs and keep it concise.
 """
 
 

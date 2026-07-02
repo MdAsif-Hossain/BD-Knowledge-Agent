@@ -25,7 +25,8 @@ except ImportError:  # pragma: no cover
 from langchain_community.utilities import SQLDatabase
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.tools import Tool
+from langchain_core.tools import StructuredTool
+from pydantic import BaseModel, Field
 from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
 
@@ -37,6 +38,14 @@ _FORBIDDEN = re.compile(
     re.IGNORECASE,
 )
 _RESULT_CHAR_LIMIT = 4000  # cap the SQL result text handed back to the LLM
+
+
+class _DBQuestion(BaseModel):
+    """Explicit, named argument schema so tool-calling models fill it reliably."""
+
+    question: str = Field(
+        description="The natural-language question to answer from this database."
+    )
 
 
 def _read_only_db(db_path: Path, table: str) -> SQLDatabase:
@@ -59,14 +68,24 @@ def _read_only_db(db_path: Path, table: str) -> SQLDatabase:
 
 
 def _clean_sql(text: str) -> str:
-    """Strip code fences / ``SQLQuery:`` labels that some models emit."""
+    """Extract a clean SQL statement from an LLM response.
+
+    Handles models (e.g. Llama) that echo the ``Question: ... SQLQuery: ...``
+    scaffold, wrap the query in markdown fences, or append a ``SQLResult:`` label.
+    """
+    text = text.strip()
+    # If the model echoed the scaffold, keep only what follows the SQLQuery: label.
+    match = re.search(r"SQLQuery:\s*", text, flags=re.IGNORECASE)
+    if match:
+        text = text[match.end() :]
+    # Drop any trailing SQLResult:/Answer: section the model may add.
+    text = re.split(r"\n\s*(?:SQLResult:|Answer:)", text, flags=re.IGNORECASE)[0]
+    # Strip markdown code fences.
     text = text.strip()
     if text.startswith("```"):
         text = re.sub(r"^```[a-zA-Z]*", "", text).strip().strip("`").strip()
-    text = re.sub(r"^\s*SQLQuery:\s*", "", text, flags=re.IGNORECASE)
     # Keep only the first statement.
-    text = text.split(";")[0].strip()
-    return text
+    return text.split(";")[0].strip()
 
 
 def _is_safe_select(sql: str) -> bool:
@@ -76,7 +95,9 @@ def _is_safe_select(sql: str) -> bool:
     return _FORBIDDEN.search(sql) is None
 
 
-def make_db_tool(llm, db_path: Path, table: str, name: str, description: str) -> Tool:
+def make_db_tool(
+    llm, db_path: Path, table: str, name: str, description: str
+) -> StructuredTool:
     """Create a natural-language question-answering Tool over one SQLite table."""
     db_path = Path(db_path)
     db = _read_only_db(db_path, table)
@@ -127,7 +148,12 @@ def make_db_tool(llm, db_path: Path, table: str, name: str, description: str) ->
         result = result[:_RESULT_CHAR_LIMIT]
         return answer_chain.invoke({"question": question, "sql": sql, "result": result})
 
-    return Tool(name=name, func=_run, description=description)
+    return StructuredTool.from_function(
+        func=_run,
+        name=name,
+        description=description,
+        args_schema=_DBQuestion,
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -170,7 +196,7 @@ _TOOL_SPECS = [
 ]
 
 
-def build_db_tools(llm) -> list[Tool]:
+def build_db_tools(llm) -> list[StructuredTool]:
     """Build the three DB-specific tools required by the project spec."""
     tools = []
     for spec in _TOOL_SPECS:

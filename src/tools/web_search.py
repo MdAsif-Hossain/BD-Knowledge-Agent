@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import os
 
-from langchain_core.tools import Tool
+from langchain_core.tools import StructuredTool
+from pydantic import BaseModel, Field
 
 _DESCRIPTION = (
     "Search the web for GENERAL KNOWLEDGE about Bangladesh that is NOT in the local "
@@ -17,6 +18,12 @@ _DESCRIPTION = (
     "when a database tool reports that a detail is not in its dataset. "
     "Input: a search query or question."
 )
+
+
+class _SearchQuery(BaseModel):
+    """Explicit, named argument schema so tool-calling models fill it reliably."""
+
+    query: str = Field(description="The search query or question to look up on the web.")
 
 
 def _duckduckgo_search(query: str, max_results: int = 5) -> str:
@@ -41,7 +48,7 @@ def _duckduckgo_search(query: str, max_results: int = 5) -> str:
     )
 
 
-def build_web_search_tool() -> Tool:
+def build_web_search_tool() -> StructuredTool:
     """Return the WebSearchTool (Tavily if a key is set, else DuckDuckGo)."""
     if os.getenv("TAVILY_API_KEY"):
         try:
@@ -52,8 +59,21 @@ def build_web_search_tool() -> Tool:
             def _tavily_run(query: str) -> str:
                 return str(tavily.invoke(query))
 
-            return Tool(name="WebSearchTool", func=_tavily_run, description=_DESCRIPTION)
+            return StructuredTool.from_function(
+                func=_tavily_run,
+                name="WebSearchTool",
+                description=_DESCRIPTION,
+                args_schema=_SearchQuery,
+            )
         except Exception:  # noqa: BLE001 - fall back to DuckDuckGo
             pass
 
-    return Tool(name="WebSearchTool", func=_duckduckgo_search, description=_DESCRIPTION)
+    def _run(query: str) -> str:
+        return _duckduckgo_search(query)
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="WebSearchTool",
+        description=_DESCRIPTION,
+        args_schema=_SearchQuery,
+    )
