@@ -7,7 +7,6 @@ langchain-google-genai>=2.0.0
 # Optional drop-in providers (uncomment/install as needed):
 langchain-groq>=0.2.0
 # langchain-openai>=0.2.0
-# langchain-anthropic>=0.3.0
 
 # --- Data: HuggingFace datasets -> SQLite ---
 datasets>=2.19.0

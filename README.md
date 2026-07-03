@@ -78,7 +78,7 @@ Three real Bangladesh datasets are converted into clean, typed SQLite databases 
 - 🧠 **Smart tool routing** — a single LangChain `AgentExecutor` picks the right tool per question, with no hard-coded `if/else`.
 - 🗣️ **Natural language → SQL → natural language** — each database tool translates your question to SQL, runs it, and phrases the result back in plain English.
 - 🔀 **Graceful fallback** — when the data can't answer, the agent routes to web search rather than making something up.
-- 💸 **Runs for free** — defaults to **Google Gemini** (free tier) + **DuckDuckGo** (no key). Swap to Groq, OpenAI, or Claude with a single env var.
+- 💸 **Runs for free** — defaults to **Google Gemini** (free tier) + **DuckDuckGo** (no key). Swap to Groq or OpenAI with a single env var.
 - 🛡️ **Safe by design** — databases open **read-only**; every generated query is validated to be `SELECT`-only before it runs.
 - 🎨 **Two interfaces** — a polished **Streamlit** chat app *and* a terminal **CLI**.
 - ✅ **Engineered like a product** — pytest suite, GitHub Actions CI, Dockerfile, Colab notebook, and typed, documented code.
@@ -182,7 +182,7 @@ Everything is driven by `.env` (see [`.env.example`](.env.example)):
 
 | Variable | Purpose | Default |
 |---|---|---|
-| `LLM_PROVIDER` | `google` · `groq` · `openai` · `anthropic` | `google` |
+| `LLM_PROVIDER` | `google` · `groq` · `openai` | `google` |
 | `GOOGLE_API_KEY` | Free Gemini key — [get one](https://aistudio.google.com/apikey) | — |
 | `GROQ_API_KEY` | Free Groq key — [get one](https://console.groq.com/keys) | — |
 | `TAVILY_API_KEY` | *Optional* — upgrades web search from DuckDuckGo to Tavily | — |
@@ -230,7 +230,7 @@ Covered: database schema & row counts, the SQL safety guard (blocks `DELETE`/`DR
 
 **Language:** Python 3.11+
 **Agent framework:** LangChain (tool-calling `AgentExecutor`, `create_sql_query_chain`)
-**LLM:** Google Gemini *(free)* — pluggable with Groq / OpenAI / Claude
+**LLM:** Google Gemini *(free)* — pluggable with Groq / OpenAI
 **Data:** HuggingFace `datasets` + `pandas` → SQLite (via SQLAlchemy)
 **Search:** DuckDuckGo *(keyless)* / Tavily *(optional)*
 **UI:** Streamlit + a CLI
