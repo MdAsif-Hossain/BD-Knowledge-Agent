@@ -1,0 +1,37 @@
+# Keep the Docker build context small and secret-free.
+
+# Version control / CI
+.git
+.github
+.gitignore
+.gitattributes
+
+# Secrets & local env
+.env
+.env.*
+!.env.example
+
+# Python caches / envs
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# HuggingFace / build caches
+.cache/
+hf_cache/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Docs & notebooks not needed at runtime
+notebooks/
+*.md
+!README.md
