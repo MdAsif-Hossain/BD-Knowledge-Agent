@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BD Knowledge Agent — Multi-Tool AI Agent for Bangladesh</title>
+<meta name="description" content="A LangChain AI agent that answers Bangladesh data questions from live SQLite databases and falls back to web search for everything else." />
+<meta name="theme-color" content="#0d0d0d" />
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content="BD Knowledge Agent — Multi-Tool AI Agent for Bangladesh" />
+<meta property="og:description" content="Ask a question. Watch it choose the right tool — a database, or the web — and answer with real data." />
+<meta name="twitter:card" content="summary" />
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%A0%3C/text%3E%3C/svg%3E" />
+
+<style>
+  :root {
+    --page-plane:   #0d0d0d;
+    --surface-1:    #1a1a19;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:   #898781;
+    --border:       rgba(255,255,255,0.10);
+
+    --series-institutions: #3987e5; /* blue  */
+    --series-hospitals:    #199e70; /* aqua  */
+    --series-restaurants:  #c98500; /* amber */
+    --series-web:          #9085e9; /* violet */
+  }
+
+  * { box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--text-primary);
+    background:
+      radial-gradient(1200px 600px at 18% -10%, rgba(57,135,229,0.22), transparent 60%),
+      radial-gradient(1000px 520px at 100% 0%, rgba(144,133,233,0.16), transparent 60%),
+      var(--page-plane);
+    overflow-x: hidden;
+  }
+
+  a { color: inherit; }
+
+  :focus-visible {
+    outline: 2px solid var(--series-institutions);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 96px 24px;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.03);
+    padding: 6px 14px;
+    border-radius: 999px;
+  }
+
+  h1, h2, h3 { line-height: 1.15; margin: 0; }
+  p { color: var(--text-secondary); line-height: 1.6; }
+
+  /* ---------------- Hero ---------------- */
+  #hero {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    max-width: none;
+  }
+
+  #bg-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    display: block;
+  }
+
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 780px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+  }
+
+  .hero-inner h1 {
+    font-size: clamp(2.2rem, 5.5vw, 3.6rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .hero-inner h1 span {
+    background: linear-gradient(90deg, var(--series-institutions), var(--series-web));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .hero-inner .tagline {
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    max-width: 620px;
+  }
+
+  .cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 8px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 12px 22px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    transition: transform 200ms ease, border-color 200ms ease, background 200ms ease, box-shadow 200ms ease;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn:active { transform: translateY(0) scale(0.97); }
+  .btn-primary {
+    background: var(--series-institutions);
+    border-color: var(--series-institutions);
+    color: #fff;
+    box-shadow: 0 8px 24px -8px rgba(57,135,229,0.55);
+  }
+  .btn-primary:hover { background: #2a78d6; box-shadow: 0 10px 28px -6px rgba(57,135,229,0.65); }
+  .btn-ghost {
+    background: rgba(255,255,255,0.03);
+    color: var(--text-primary);
+  }
+  .btn-ghost:hover { border-color: rgba(255,255,255,0.3); }
+
+  .scroll-cue {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.4rem;
+    color: var(--text-muted);
+    animation: bob 1.8s ease-in-out infinite;
+    z-index: 1;
+  }
+  @keyframes bob {
+    0%, 100% { transform: translate(-50%, 0); }
+    50% { transform: translate(-50%, 8px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-cue { animation: none; }
+  }
+
+  /* ---------------- Stats ---------------- */
+  #stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    padding-top: 0;
+    padding-bottom: 64px;
+  }
+  .stat-tile {
+    border: 1px solid var(--border);
+    background: var(--surface-1);
+    border-radius: 14px;
+    padding: 24px 20px;
+    text-align: center;
+    box-shadow: 0 12px 32px -18px rgba(0,0,0,0.6);
+    transition: transform 200ms ease, box-shadow 200ms ease;
+  }
+  .stat-tile:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 36px -16px rgba(0,0,0,0.7);
+  }
+  .stat-tile .value {
+    font-size: clamp(1.6rem, 3.4vw, 2.2rem);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+  }
+  .stat-tile .label {
+    margin-top: 6px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  /* ---------------- Section headers ---------------- */
+  .section-head {
+    text-align: center;
+    max-width: 640px;
+    margin: 0 auto 48px;
+  }
+  .section-head h2 {
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    font-weight: 800;
+    margin-bottom: 12px;
+  }
+
+  /* ---------------- Tool cards (tilt) ---------------- */
+  .tool-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 20px;
+  }
+  .tilt-card {
+    border: 1px solid var(--border);
+    background: var(--surface-1);
+    border-radius: 16px;
+    padding: 24px;
+    border-left: 3px solid var(--accent, var(--series-institutions));
+    box-shadow: 0 14px 34px -20px rgba(0,0,0,0.65);
+    transform-style: preserve-3d;
+    will-change: transform;
+    transition: transform 120ms ease-out, box-shadow 200ms ease;
+  }
+  .tilt-card:hover { box-shadow: 0 18px 40px -16px rgba(0,0,0,0.75); }
+  .tilt-card:active { transform: scale(0.98) !important; }
+  .tilt-card .icon { font-size: 1.8rem; }
+  .tilt-card h3 { font-size: 1.05rem; margin: 12px 0 6px; }
+  .tilt-card p { font-size: 0.92rem; margin: 0 0 12px; }
+  .tilt-card code {
+    display: inline-block;
+    font-size: 0.78rem;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 4px 9px;
+    border-radius: 999px;
+  }
+
+  /* ---------------- Architecture flow ---------------- */
+  .flow-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .flow-box {
+    border: 1px solid var(--border);
+    background: var(--surface-1);
+    border-radius: 12px;
+    padding: 16px 18px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+    min-width: 140px;
+  }
+  .flow-arrow {
+    color: var(--text-muted);
+    font-size: 1.3rem;
+  }
+
+  /* ---------------- Feature grid (small) ---------------- */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .feature-tile {
+    border: 1px solid var(--border);
+    background: var(--surface-1);
+    border-radius: 12px;
+    padding: 18px 20px;
+    font-size: 0.9rem;
+    box-shadow: 0 12px 28px -20px rgba(0,0,0,0.6);
+  }
+  .feature-tile .icon { font-size: 1.3rem; margin-right: 8px; }
+
+  /* ---------------- Scroll reveal ---------------- */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 500ms ease, transform 500ms ease;
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+  }
+
+  /* ---------------- Demo ---------------- */
+  #demo-frame {
+    border: 1px dashed var(--border);
+    background: var(--surface-1);
+    border-radius: 16px;
+    padding: 48px 24px;
+    text-align: center;
+  }
+  #demo-frame video {
+    max-width: 100%;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    display: none;
+  }
+
+  /* ---------------- Tech stack ---------------- */
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+  .pill {
+    border: 1px solid var(--border);
+    background: var(--surface-1);
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  /* ---------------- Footer ---------------- */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 24px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+  footer .links {
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  footer .links a { color: var(--text-secondary); text-decoration: none; font-weight: 600; }
+  footer .links a:hover { color: var(--text-primary); }
+</style>
+</head>
+<body>
+
+<section id="hero">
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+  <div class="hero-inner">
+    <span class="eyebrow">🇧🇩 Open-Source AI Agent</span>
+    <h1>BD Knowledge Agent<br /><span>Multi-Tool AI Agent for Bangladesh</span></h1>
+    <p class="tagline">
+      Ask <strong>"How many hospitals are in Dhaka?"</strong> and it queries a live database.
+      Ask <strong>"What is the role of DGHS?"</strong> and it searches the web.
+      One LangChain agent decides which tool to use — automatically.
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/MdAsif-Hossain/BD-Knowledge-Agent" target="_blank" rel="noopener">⭐ View on GitHub</a>
+      <a class="btn btn-ghost" href="https://github.com/MdAsif-Hossain/BD-Knowledge-Agent#-quickstart" target="_blank" rel="noopener">🚀 Run it free</a>
+      <a class="btn btn-ghost" href="#demo">🎥 Watch the demo</a>
+    </div>
+  </div>
+  <div class="scroll-cue">↓</div>
+</section>
+
+<section id="stats">
+  <div class="stat-tile"><div class="value" data-count="86490">0</div><div class="label">Total records</div></div>
+  <div class="stat-tile"><div class="value" data-count="34901">0</div><div class="label">Institutions</div></div>
+  <div class="stat-tile"><div class="value" data-count="38886">0</div><div class="label">Hospitals</div></div>
+  <div class="stat-tile"><div class="value" data-count="12703">0</div><div class="label">Restaurants</div></div>
+</section>
+
+<section id="tools">
+  <div class="section-head reveal">
+    <h2>One question. The right tool. Every time.</h2>
+    <p>A tool-calling <code>AgentExecutor</code> routes each question — no hard-coded if/else.</p>
+  </div>
+  <div class="tool-grid reveal">
+    <div class="tilt-card" style="--accent: var(--series-institutions)">
+      <div class="icon">🏫</div>
+      <h3>InstitutionsDBTool</h3>
+      <p>Schools, colleges & madrasahs — 34,901 records with location and management details.</p>
+      <code>"How many government institutions?"</code>
+    </div>
+    <div class="tilt-card" style="--accent: var(--series-hospitals)">
+      <div class="icon">🏥</div>
+      <h3>HospitalsDBTool</h3>
+      <p>Hospitals & health facilities — 38,886 records by agency, type, and district.</p>
+      <code>"Hospitals in Dhaka district?"</code>
+    </div>
+    <div class="tilt-card" style="--accent: var(--series-restaurants)">
+      <div class="icon">🍽️</div>
+      <h3>RestaurantsDBTool</h3>
+      <p>12,703 restaurants with ratings, review counts, and address.</p>
+      <code>"Top-rated restaurants?"</code>
+    </div>
+    <div class="tilt-card" style="--accent: var(--series-web)">
+      <div class="icon">🌐</div>
+      <h3>WebSearchTool</h3>
+      <p>Live web search for anything the datasets don't cover — free, no key needed.</p>
+      <code>"What is the role of DGHS?"</code>
+    </div>
+  </div>
+</section>
+
+<section id="architecture">
+  <div class="section-head reveal">
+    <h2>How it decides</h2>
+    <p>Text-to-SQL, guarded to read-only, with a graceful web-search fallback.</p>
+  </div>
+  <div class="flow-row reveal">
+    <div class="flow-box">👤 Your question</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">🧠 Agent picks a tool</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">🗄️ SQL or 🌐 Search</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">✅ Grounded answer</div>
+  </div>
+</section>
+
+<section id="safety">
+  <div class="section-head reveal">
+    <h2>Safe &amp; free by design</h2>
+  </div>
+  <div class="feature-grid reveal">
+    <div class="feature-tile"><span class="icon">🛡️</span>Databases open <strong>read-only</strong> — a stray write raises instead of mutating data.</div>
+    <div class="feature-tile"><span class="icon">🚦</span>Every generated query is checked to be <strong>SELECT-only</strong> before it runs.</div>
+    <div class="feature-tile"><span class="icon">💸</span>Runs on the <strong>free</strong> tier of Gemini or Groq — $0 to try.</div>
+    <div class="feature-tile"><span class="icon">🔀</span>Falls back to web search instead of guessing when the data can't answer.</div>
+  </div>
+</section>
+
+<section id="demo">
+  <div class="section-head reveal">
+    <h2>🎥 See it in action</h2>
+    <p>A screen recording of the agent answering database + web questions.</p>
+  </div>
+  <div id="demo-frame" class="reveal">
+    <!--
+      PASTE VIDEO: open a GitHub Issue in the repo, drag & drop the .mp4,
+      then set this <video> tag's src to the resulting
+      https://github.com/user-attachments/assets/... link and change
+      style="display:none" to style="display:inline-block".
+    -->
+    <video controls style="display:none"></video>
+    <p id="demo-fallback">📽️ Full walkthrough video coming soon.</p>
+  </div>
+</section>
+
+<section id="stack">
+  <div class="section-head reveal">
+    <h2>Built with</h2>
+  </div>
+  <div class="pill-row reveal">
+    <span class="pill">Python 3.11+</span>
+    <span class="pill">LangChain</span>
+    <span class="pill">Google Gemini</span>
+    <span class="pill">Groq</span>
+    <span class="pill">Streamlit</span>
+    <span class="pill">SQLite</span>
+    <span class="pill">pytest</span>
+    <span class="pill">GitHub Actions</span>
+  </div>
+</section>
+
+<footer>
+  <div class="links">
+    <a href="https://github.com/MdAsif-Hossain/BD-Knowledge-Agent" target="_blank" rel="noopener">GitHub Repo</a>
+    <a href="https://github.com/MdAsif-Hossain/BD-Knowledge-Agent#readme" target="_blank" rel="noopener">README</a>
+    <a href="https://github.com/MdAsif-Hossain/BD-Knowledge-Agent/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+  </div>
+  Built by MdAsif-Hossain · Datasets by Mahadih534 on HuggingFace
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- Count-up stats ---------- */
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function easeOutExpo(t) { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
+
+  function animateCount(el) {
+    var target = parseInt(el.getAttribute("data-count"), 10) || 0;
+    if (reduceMotion) { el.textContent = target.toLocaleString("en-US"); return; }
+    var start = performance.now();
+    var duration = 1400;
+    function tick(now) {
+      var p = Math.min(1, (now - start) / duration);
+      var value = Math.round(target * easeOutExpo(p));
+      el.textContent = value.toLocaleString("en-US");
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  var counted = false;
+  var statsSection = document.getElementById("stats");
+  if (statsSection && "IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting && !counted) {
+          counted = true;
+          document.querySelectorAll(".stat-tile .value").forEach(animateCount);
+        }
+      });
+    }, { threshold: 0.4 });
+    io.observe(statsSection);
+  } else {
+    document.querySelectorAll(".stat-tile .value").forEach(animateCount);
+  }
+
+  /* ---------- Scroll reveal ---------- */
+  var revealEls = document.querySelectorAll(".reveal");
+  if ("IntersectionObserver" in window && revealEls.length) {
+    var revealIO = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          revealIO.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: "0px 0px -40px 0px" });
+    revealEls.forEach(function (el) { revealIO.observe(el); });
+  } else {
+    revealEls.forEach(function (el) { el.classList.add("is-visible"); });
+  }
+
+  /* ---------- 3D tilt cards ---------- */
+  if (!reduceMotion) {
+    document.querySelectorAll(".tilt-card").forEach(function (card) {
+      card.addEventListener("mousemove", function (e) {
+        var r = card.getBoundingClientRect();
+        var px = (e.clientX - r.left) / r.width - 0.5;
+        var py = (e.clientY - r.top) / r.height - 0.5;
+        card.style.transform =
+          "perspective(700px) rotateX(" + (-py * 10).toFixed(2) + "deg) rotateY(" + (px * 10).toFixed(2) + "deg) translateZ(4px)";
+      });
+      card.addEventListener("mouseleave", function () {
+        card.style.transform = "perspective(700px) rotateX(0deg) rotateY(0deg)";
+      });
+    });
+  }
+
+  /* ---------- Video placeholder auto-detect ---------- */
+  var video = document.querySelector("#demo-frame video");
+  var fallback = document.getElementById("demo-fallback");
+  if (video && video.getAttribute("src")) {
+    video.style.display = "inline-block";
+    if (fallback) fallback.style.display = "none";
+  }
+})();
+</script>
+
+<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script>
+(function () {
+  "use strict";
+  var canvas = document.getElementById("bg-canvas");
+  if (!canvas || typeof THREE === "undefined") return;
+
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+  } catch (e) {
+    return; /* no WebGL — the CSS gradient backdrop already covers the hero */
+  }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.set(0, 0, 15);
+
+  function resize() {
+    var w = canvas.parentElement.clientWidth;
+    var h = canvas.parentElement.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  /* glow sprite texture, generated once */
+  function glowTexture(hex) {
+    var c = document.createElement("canvas");
+    c.width = c.height = 128;
+    var ctx = c.getContext("2d");
+    var g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    g.addColorStop(0, hex + "cc");
+    g.addColorStop(1, hex + "00");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 128, 128);
+    return new THREE.CanvasTexture(c);
+  }
+
+  var hub = new THREE.Group();
+  scene.add(hub);
+
+  /* central agent node */
+  var centerGeo = new THREE.IcosahedronGeometry(1.05, 1);
+  var centerMat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.85 });
+  var centerMesh = new THREE.Mesh(centerGeo, centerMat);
+  hub.add(centerMesh);
+
+  var centerGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture("#ffffff"), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+  centerGlow.scale.set(4.2, 4.2, 1);
+  hub.add(centerGlow);
+
+  /* orbiting tool nodes */
+  var toolColors = [0x3987e5, 0x199e70, 0xc98500, 0x9085e9];
+  var radius = 5;
+  var nodes = [];
+  toolColors.forEach(function (color, i) {
+    var angle = (i / toolColors.length) * Math.PI * 2;
+    var y = (i % 2 === 0 ? 1 : -1) * 0.9;
+    var x = Math.cos(angle) * radius;
+    var z = Math.sin(angle) * radius;
+
+    var sphere = new THREE.Mesh(
+      new THREE.SphereGeometry(0.42, 20, 20),
+      new THREE.MeshBasicMaterial({ color: color })
+    );
+    sphere.position.set(x, y, z);
+    hub.add(sphere);
+
+    var glow = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: glowTexture("#" + color.toString(16).padStart(6, "0")),
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
+    }));
+    glow.position.copy(sphere.position);
+    glow.scale.set(2.4, 2.4, 1);
+    hub.add(glow);
+
+    var lineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), sphere.position]);
+    var lineMat = new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: 0.35 });
+    hub.add(new THREE.Line(lineGeo, lineMat));
+
+    nodes.push({ sphere: sphere, glow: glow, baseY: y, phase: i });
+  });
+
+  /* background particles for depth */
+  var particleCount = 140;
+  var positions = new Float32Array(particleCount * 3);
+  for (var p = 0; p < particleCount; p++) {
+    var r = 9 + Math.random() * 9;
+    var theta = Math.random() * Math.PI * 2;
+    var phi = Math.acos(2 * Math.random() - 1);
+    positions[p * 3] = r * Math.sin(phi) * Math.cos(theta);
+    positions[p * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+    positions[p * 3 + 2] = r * Math.cos(phi);
+  }
+  var particleGeo = new THREE.BufferGeometry();
+  particleGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  var particleMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.05, transparent: true, opacity: 0.4 });
+  var particles = new THREE.Points(particleGeo, particleMat);
+  scene.add(particles);
+
+  /* mouse parallax */
+  var mouseX = 0, mouseY = 0;
+  window.addEventListener("mousemove", function (e) {
+    mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+    mouseY = (e.clientY / window.innerHeight) * 2 - 1;
+  });
+
+  var clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    var t = clock.getElapsedTime();
+
+    if (!reduceMotion) {
+      hub.rotation.y = t * 0.15;
+      particles.rotation.y = -t * 0.03;
+      nodes.forEach(function (n) {
+        n.sphere.position.y = n.baseY + Math.sin(t * 0.8 + n.phase) * 0.25;
+        n.glow.position.y = n.sphere.position.y;
+      });
+      camera.position.x += (mouseX * 1.4 - camera.position.x) * 0.03;
+      camera.position.y += (-mouseY * 1.0 - camera.position.y) * 0.03;
+      camera.lookAt(0, 0, 0);
+    }
+
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+</script>
+
+</body>
+</html>

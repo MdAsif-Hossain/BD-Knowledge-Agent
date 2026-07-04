@@ -1,15 +1,8 @@
-<!--
-  ┌─────────────────────────────────────────────────────────────────────┐
-  │  BEFORE PUBLISHING: replace every "OWNER/REPO" below with your own    │
-  │  GitHub path (e.g. boraqstore7/multi-tool-ai-agent-bangladesh).       │
-  └─────────────────────────────────────────────────────────────────────┘
--->
-
 <div align="center">
 
-# 🇧🇩 Multi-Tool AI Agent for Bangladesh
+# 🇧🇩 BD Knowledge Agent
 
-### An LLM agent that answers data questions from live databases — and searches the web for everything else.
+### Multi-Tool AI Agent for Bangladesh — an LLM agent that answers data questions from live databases, and searches the web for everything else.
 
 *Ask **"How many hospitals are in Dhaka?"** → it queries a database.*
 *Ask **"What is the role of DGHS?"** → it searches the web.*
@@ -21,11 +14,13 @@
 [![LangChain](https://img.shields.io/badge/Built%20with-LangChain-1C3C3C?logo=langchain&logoColor=white)](https://python.langchain.com/)
 [![Google Gemini](https://img.shields.io/badge/LLM-Gemini%20(free)-4285F4?logo=googlegemini&logoColor=white)](https://aistudio.google.com/)
 [![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
-[![CI](https://img.shields.io/github/actions/workflow/status/OWNER/REPO/ci.yml?label=CI&logo=githubactions&logoColor=white)](../../actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/MdAsif-Hossain/BD-Knowledge-Agent/ci.yml?label=CI&logo=githubactions&logoColor=white)](../../actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../pulls)
 
 **`86,490` records · `3` SQLite databases · `4` tools · `1` smart router · `$0` to run**
+
+### 🎨 [**Open the interactive 3D showcase →**](https://mdasif-hossain.github.io/BD-Knowledge-Agent/)
 
 </div>
 
@@ -52,6 +47,7 @@
 
 |  | Try it yourself |
 |---|---|
+| 🎨 **3D showcase page** | [mdasif-hossain.github.io/BD-Knowledge-Agent](https://mdasif-hossain.github.io/BD-Knowledge-Agent/) |
 | 🌐 **Live app** | _add your Streamlit Community Cloud URL here_ |
 | 💻 **Run the web UI** | `streamlit run app.py` |
 | ⌨️ **Run in terminal** | `python -m src.cli` |
