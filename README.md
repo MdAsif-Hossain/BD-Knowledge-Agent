@@ -28,22 +28,7 @@
 
 ## 🎥 Demo
 
-<!--
-  ▶️  HOW TO ADD YOUR SCREEN RECORDING (no video hosting needed):
-      1. Open a new GitHub Issue in this repo (Issues → New issue).
-      2. Drag & drop your .mp4 / .mov screen recording into the comment box.
-         Wait for the upload — GitHub turns it into a link like:
-            https://github.com/user-attachments/assets/1a2b3c4d-....
-      3. Copy that link, paste it on the line marked "PASTE VIDEO LINK HERE"
-         below (on its own line — GitHub auto-embeds a player), and delete
-         this comment block. You can close the issue afterwards.
--->
-
-> 📽️ **Full walkthrough video coming soon.** _(A screen recording of the agent answering database + web questions will be embedded here.)_
-
-<!-- ┌──────────────── PASTE VIDEO LINK HERE (on its own line) ────────────────┐ -->
-
-<!-- └─────────────────────────────────────────────────────────────────────────┘ -->
+https://github.com/user-attachments/assets/34f0c963-7fe6-4d2b-8969-1ac036992a5a
 
 |  | Try it yourself |
 |---|---|
