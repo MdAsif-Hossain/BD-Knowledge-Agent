@@ -32,6 +32,9 @@ hf_cache/
 Thumbs.db
 
 # Docs & notebooks not needed at runtime
+# (docs/ is the static GitHub Pages marketing page; web/ is the real app's
+# frontend and MUST stay — do not add it here.)
+docs/
 notebooks/
 *.md
 !README.md

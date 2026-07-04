@@ -12,8 +12,10 @@ COPY . .
 # Build the SQLite databases if they are not already present
 RUN python -m src.data.build_databases || true
 
-EXPOSE 8501
+# Render/most PaaS inject $PORT; Hugging Face Spaces (Docker SDK) expects 7860.
+ENV PORT=8000
+EXPOSE 8000
 
-HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
+HEALTHCHECK CMD python -c "import os,urllib.request; urllib.request.urlopen(f'http://localhost:{os.environ.get(\"PORT\",8000)}/api/status', timeout=3)" || exit 1
 
-ENTRYPOINT ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD uvicorn server:app --host 0.0.0.0 --port ${PORT}

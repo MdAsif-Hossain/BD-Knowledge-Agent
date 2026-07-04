@@ -8,7 +8,6 @@
 *.env
 .envrc
 !.env.example                # keep the template
-.streamlit/secrets.toml      # Streamlit Cloud reads secrets from its dashboard
 
 # --- Python bytecode / build artifacts -------------------------------------
 __pycache__/

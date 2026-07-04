@@ -13,7 +13,7 @@
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![LangChain](https://img.shields.io/badge/Built%20with-LangChain-1C3C3C?logo=langchain&logoColor=white)](https://python.langchain.com/)
 [![Google Gemini](https://img.shields.io/badge/LLM-Gemini%20(free)-4285F4?logo=googlegemini&logoColor=white)](https://aistudio.google.com/)
-[![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![CI](https://img.shields.io/github/actions/workflow/status/MdAsif-Hossain/BD-Knowledge-Agent/ci.yml?label=CI&logo=githubactions&logoColor=white)](../../actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../pulls)
@@ -47,9 +47,9 @@
 
 |  | Try it yourself |
 |---|---|
-| 🎨 **3D showcase page** | [mdasif-hossain.github.io/BD-Knowledge-Agent](https://mdasif-hossain.github.io/BD-Knowledge-Agent/) |
-| 🌐 **Live app** | _add your Streamlit Community Cloud URL here_ |
-| 💻 **Run the web UI** | `streamlit run app.py` |
+| 🎨 **Marketing showcase (static)** | [mdasif-hossain.github.io/BD-Knowledge-Agent](https://mdasif-hossain.github.io/BD-Knowledge-Agent/) |
+| 🌐 **Live chat app** | _add your Hugging Face Spaces / Render URL here_ |
+| 💻 **Run the animated website locally** | `uvicorn server:app --reload` → open `http://localhost:8000` |
 | ⌨️ **Run in terminal** | `python -m src.cli` |
 | 📓 **Open in Colab** | [`notebooks/demo.ipynb`](notebooks/demo.ipynb) |
 
@@ -76,7 +76,7 @@ Three real Bangladesh datasets are converted into clean, typed SQLite databases 
 - 🔀 **Graceful fallback** — when the data can't answer, the agent routes to web search rather than making something up.
 - 💸 **Runs for free** — defaults to **Google Gemini** (free tier) + **DuckDuckGo** (no key). Swap to Groq or OpenAI with a single env var.
 - 🛡️ **Safe by design** — databases open **read-only**; every generated query is validated to be `SELECT`-only before it runs.
-- 🎨 **Two interfaces** — a polished **Streamlit** chat app *and* a terminal **CLI**.
+- 🎨 **A real animated website** — a custom 3D/glassmorphism chat UI (FastAPI + vanilla JS, no framework) *and* a terminal **CLI**.
 - ✅ **Engineered like a product** — pytest suite, GitHub Actions CI, Dockerfile, Colab notebook, and typed, documented code.
 
 ---
@@ -162,9 +162,9 @@ cp .env.example .env
 # 3. Build the SQLite databases from HuggingFace (one-time, ~30s)
 python -m src.data.build_databases
 
-# 4a. Chat in the browser
-streamlit run app.py
-# 4b. ...or in the terminal
+# 4a. Launch the animated chat website (http://localhost:8000)
+uvicorn server:app --reload
+# 4b. ...or chat in the terminal
 python -m src.cli
 ```
 
@@ -190,7 +190,9 @@ Switching provider is a one-line change — the [`get_llm()`](src/config.py) fac
 ## 🧱 Project structure
 
 ```
-├── app.py                        # Streamlit chat UI (deploy target)
+├── server.py                     # FastAPI backend: JSON chat API + serves web/
+├── web/index.html                # the animated chat website (vanilla JS + Three.js)
+├── docs/index.html               # static marketing showcase (GitHub Pages)
 ├── src/
 │   ├── config.py                 # paths, DB registry, get_llm() provider factory
 │   ├── data/build_databases.py   # HuggingFace datasets → typed SQLite
@@ -203,7 +205,7 @@ Switching provider is a one-line change — the [`get_llm()`](src/config.py) fac
 ├── tests/                        # pytest suite
 ├── notebooks/demo.ipynb          # Colab demo
 ├── .github/workflows/ci.yml      # lint + tests on every push
-├── Dockerfile                    # optional containerized deploy
+├── Dockerfile                    # containerized deploy (Render / HF Spaces)
 └── requirements.txt
 ```
 
@@ -218,7 +220,7 @@ pytest -q        # unit tests
 
 Continuous integration runs lint + tests on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)). The suite uses the committed databases and a fake LLM, so **CI needs no API keys and no network** — it stays green and free.
 
-Covered: database schema & row counts, the SQL safety guard (blocks `DELETE`/`DROP`/etc.), SQL cleaning, tool construction, and web-tool wiring.
+Covered: database schema & row counts, the SQL safety guard (blocks `DELETE`/`DROP`/etc.), SQL cleaning, tool construction, web-tool wiring, and the `/api/status` endpoint.
 
 ---
 
@@ -229,25 +231,33 @@ Covered: database schema & row counts, the SQL safety guard (blocks `DELETE`/`DR
 **LLM:** Google Gemini *(free)* — pluggable with Groq / OpenAI
 **Data:** HuggingFace `datasets` + `pandas` → SQLite (via SQLAlchemy)
 **Search:** DuckDuckGo *(keyless)* / Tavily *(optional)*
-**UI:** Streamlit + a CLI
+**UI:** Custom animated website (vanilla JS + Three.js) served by FastAPI, plus a CLI
 **Quality:** pytest · ruff · GitHub Actions · Docker
 
 ---
 
 ## ☁️ Deploy (free)
 
-**Streamlit Community Cloud**
+The app is a standard Dockerized FastAPI service, so it runs on any free container host. Two good options:
 
-1. Push this repo to GitHub.
-2. [share.streamlit.io](https://share.streamlit.io) → **New app** → select the repo → main file `app.py`.
-3. Under **Settings → Secrets**, add `GOOGLE_API_KEY = "..."`.
-4. Deploy — the committed `data/*.db` files mean it works instantly. Paste the URL into the **Demo** section above.
+**Hugging Face Spaces (Docker SDK)**
 
-**Docker** *(optional)*
+1. Create a new Space → **Docker** SDK → connect this GitHub repo (or push directly to the Space's git remote).
+2. Under **Settings → Repository secrets**, add `GOOGLE_API_KEY` (or `GROQ_API_KEY` + `LLM_PROVIDER=groq`).
+3. Set the Space's port to `8000` (matches the `Dockerfile`'s `EXPOSE`). It builds and deploys automatically.
+4. Paste the Space's URL into the **Demo** section above.
+
+**Render (free web service)**
+
+1. New **Web Service** → connect this repo → Render detects the `Dockerfile` automatically.
+2. Add the same environment variable(s) under **Environment**.
+3. Deploy — Render injects `$PORT` automatically, which the `Dockerfile`'s `CMD` already reads.
+
+**Run the container locally**
 
 ```bash
 docker build -t bd-agent .
-docker run -p 8501:8501 --env-file .env bd-agent
+docker run -p 8000:8000 --env-file .env bd-agent
 ```
 
 ---
@@ -272,7 +282,7 @@ docker run -p 8501:8501 --env-file .env bd-agent
 
 ## 🙌 Acknowledgements
 
-Datasets by [**Mahadih534**](https://huggingface.co/Mahadih534) on HuggingFace. Built with [LangChain](https://python.langchain.com/), [Google Gemini](https://aistudio.google.com/), and [Streamlit](https://streamlit.io/).
+Datasets by [**Mahadih534**](https://huggingface.co/Mahadih534) on HuggingFace. Built with [LangChain](https://python.langchain.com/), [Google Gemini](https://aistudio.google.com/), [FastAPI](https://fastapi.tiangolo.com/), and [Three.js](https://threejs.org/).
 
 ## 📄 License
 
